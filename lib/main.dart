@@ -114,8 +114,9 @@ class App extends StatelessWidget {
   const App({super.key});
 
   Future<String> getUserType(String uid) async {
+    await FirebaseAuth.instance.currentUser!.reload();
     // Default to 'child' if user document or typeUser field is not found.
-    String userType = 'child';
+    String userType = '';
     try {
       // Try to get the user from the 'ParentsUsers' collection first
       DocumentSnapshot parentUserDoc = await FirebaseFirestore.instance
@@ -171,7 +172,7 @@ class App extends StatelessWidget {
           }
           if (snapshot.hasData) {
             return FutureBuilder<String>(
-              future: getUserType(snapshot.data!.uid),
+              future: getUserType(FirebaseAuth.instance.currentUser!.uid),
               builder: (context, userTypeSnapshot) {
                 if (userTypeSnapshot.connectionState ==
                     ConnectionState.waiting) {
@@ -180,10 +181,10 @@ class App extends StatelessWidget {
                 if (userTypeSnapshot.hasError) {
                   return const AuthenticationScreen(); // Fallback to authentication screen on error
                 }
-                if (userTypeSnapshot.data == 'parent') {
-                  return const ParentHomeScreen(); // If user type is 'parent', go to ParentHomeScreen
+                if (userTypeSnapshot.data == 'child') {
+                  return const ChildHomeScreen(); // If user type is 'parent', go to ParentHomeScreen
                 }
-                return const ChildHomeScreen();
+                return const ParentHomeScreen();
               },
             );
           }

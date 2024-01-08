@@ -6,7 +6,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:parental_app/parent_screens/home.dart';
 import 'package:parental_app/widgets/user_image_picker.dart';
 
 final _firebase = FirebaseAuth.instance;
@@ -56,6 +58,14 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           password: _enteredPassword,
         );
 
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('user_images')
+            .child('${userCredentials.user!.uid}.jpg');
+
+        await storageRef.putFile(_selectedImage!);
+        final imageURL = await storageRef.getDownloadURL();
+
         FirebaseFirestore.instance
             .collection('ParentsUsers')
             .doc(userCredentials.user!.uid)
@@ -63,9 +73,11 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           'firstName': _enteredFirstName,
           'lastName': _enteredLastName,
           'email': _enteredEmail,
-          'image' : _selectedImage,
-          'typeUser' : 'parent'
+          'image': imageURL,
+          'typeUser': 'parent'
         });
+
+         await FirebaseAuth.instance.currentUser!.reload();
       }
     } on FirebaseAuthException catch (error) {
       if (error.code == 'email-already-in-use') {
@@ -77,6 +89,10 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
           content: Text(error.message ?? 'Authentication failed'),
         ),
       );
+
+      setState(() {
+        _isAuthenticating = false;
+      });
     }
   }
 
@@ -84,120 +100,129 @@ class _AuthenticationScreenState extends State<AuthenticationScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      backgroundColor: Theme.of(context).colorScheme.primary,
+      backgroundColor: const Color.fromARGB(255, 196, 254, 254),
       body: Center(
         child: SingleChildScrollView(
+          padding:
+              EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              Container(
+                margin: const EdgeInsets.only(
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                ),
+                width: 200,
+                child: Image.asset('assets/images/safe_steps_logo.png'),
+              ),
               Card(
                 margin: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(20),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (!_isLogin)
-                              UserImagePicker(
-                                onPickedImage: (pickedImage) {
-                                  _selectedImage = pickedImage;
-                                },
-                              ),
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (!_isLogin)
+                          UserImagePicker(
+                            onPickedImage: (pickedImage) {
+                              _selectedImage = pickedImage;
+                            },
+                          ),
+                        if (!_isLogin)
                           TextFormField(
                             decoration:
-                                const InputDecoration(labelText: 'Email Address'),
-                            keyboardType: TextInputType.emailAddress,
+                                const InputDecoration(labelText: 'First Name'),
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
                             validator: (value) {
-                              if (value == null ||
-                                  value.trim().isEmpty ||
-                                  !value.contains('@')) {
-                                return 'Please enter a valid email adress!';
+                              if (value == null || value.trim().length < 2) {
+                                return 'Please enter your first name';
                               }
                               return null;
                             },
                             onSaved: (value) {
-                              _enteredEmail = value!;
+                              _enteredFirstName = value!;
                             },
                           ),
+                        if (!_isLogin)
                           TextFormField(
                             decoration:
-                                const InputDecoration(labelText: 'Password'),
-                            obscureText: true,
+                                const InputDecoration(labelText: 'Last Name'),
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
                             validator: (value) {
-                              if (value == null ||
-                                  value.trim().length < 8 ||
-                                  !value.contains(RegExp(r'[A-Z]')) ||
-                                  !value.contains(RegExp(r'[1-9]'))) {
-                                return 'Password must be at least 8 characters long and includes a combination of numbers and uppercase letters!';
+                              if (value == null || value.trim().length < 2) {
+                                return 'Please enter your last name';
                               }
                               return null;
                             },
                             onSaved: (value) {
-                              _enteredPassword = value!;
+                              _enteredLastName = value!;
                             },
                           ),
-                          if (!_isLogin)
-                            TextFormField(
-                              decoration:
-                                  const InputDecoration(labelText: 'First Name'),
-                              autocorrect: false,
-                              textCapitalization: TextCapitalization.none,
-                              validator: (value) {
-                                if (value == null || value.trim().length < 2) {
-                                  return 'Please enter your first name';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) {
-                                _enteredFirstName = value!;
-                              },
-                            ),
-                          if (!_isLogin)
-                            TextFormField(
-                              decoration:
-                                  const InputDecoration(labelText: 'Last Name'),
-                              autocorrect: false,
-                              textCapitalization: TextCapitalization.none,
-                              validator: (value) {
-                                if (value == null || value.trim().length < 2) {
-                                  return 'Please enter your last name';
-                                }
-                                return null;
-                              },
-                              onSaved: (value) {
-                                _enteredLastName = value!;
-                              },
-                            ),
-                          const SizedBox(height: 12),
-                          if (_isAuthenticating)
-                            const CircularProgressIndicator(),
-                          if (!_isAuthenticating)
-                            ElevatedButton(
-                              onPressed: _submit,
-                              style: ElevatedButton.styleFrom(
-                                  backgroundColor: Theme.of(context)
-                                      .colorScheme
-                                      .primaryContainer),
-                              child: Text(_isLogin ? 'Login' : 'Sign Up'),
-                            ),
-                          if (!_isAuthenticating)
-                            TextButton(
-                              onPressed: () {
-                                setState(() {
-                                  _isLogin = !_isLogin;
-                                });
-                              },
-                              child: Text(_isLogin
-                                  ? 'Create an account'
-                                  : 'I already have an account'),
-                            ),
-                        ],
-                      ),
+                        TextFormField(
+                          decoration:
+                              const InputDecoration(labelText: 'Email Address'),
+                          keyboardType: TextInputType.emailAddress,
+                          autocorrect: false,
+                          textCapitalization: TextCapitalization.none,
+                          validator: (value) {
+                            if (value == null ||
+                                value.trim().isEmpty ||
+                                !value.contains('@')) {
+                              return 'Please enter a valid email adress!';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _enteredEmail = value!;
+                          },
+                        ),
+                        TextFormField(
+                          decoration:
+                              const InputDecoration(labelText: 'Password'),
+                          obscureText: true,
+                          validator: (value) {
+                            if (value == null ||
+                                value.trim().length < 8 ||
+                                !value.contains(RegExp(r'[A-Z]')) ||
+                                !value.contains(RegExp(r'[1-9]'))) {
+                              return 'Password must be at least 8 characters long and includes a combination of numbers and uppercase letters!';
+                            }
+                            return null;
+                          },
+                          onSaved: (value) {
+                            _enteredPassword = value!;
+                          },
+                        ),
+                        const SizedBox(height: 12),
+                        if (_isAuthenticating)
+                          const CircularProgressIndicator(),
+                        if (!_isAuthenticating)
+                          ElevatedButton(
+                            onPressed: _submit,
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Theme.of(context)
+                                    .colorScheme
+                                    .primaryContainer),
+                            child: Text(_isLogin ? 'Login' : 'Sign Up'),
+                          ),
+                        if (!_isAuthenticating)
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isLogin = !_isLogin;
+                              });
+                            },
+                            child: Text(_isLogin
+                                ? 'Create an account'
+                                : 'I already have an account'),
+                          ),
+                      ],
                     ),
                   ),
                 ),

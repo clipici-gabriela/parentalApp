@@ -76,6 +76,7 @@ flutter:
   assets:
     - assets/images/boy_avatar.png
     - assets/images/girl_avatar.png
+    - assets/images/safe_steps_logo.png
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

@@ -53,6 +53,7 @@ class _ParentAccountScreenState extends State<ParentAccountScreen> {
           if (snapshot.hasData && snapshot.data != null) {
             Map<String, dynamic> userData =
                 snapshot.data!.data() as Map<String, dynamic>;
+            String imageURL = userData['image'];
             return Scaffold(
               appBar: AppBar(
                 title: const Text('Account'),
@@ -67,18 +68,19 @@ class _ParentAccountScreenState extends State<ParentAccountScreen> {
                     right: 20,
                   ),
                   child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      if (_isParent)
-                        Row(
-                          children: [
-                            Card(
-                              child: Text('${userData['firstName']}'),
-                            ),
-                            Card(
-                              child: Text('${userData['lastName']}'),
-                            )
-                          ],
-                        ),
+                      CircleAvatar(
+                        radius: 50,
+                        backgroundImage: NetworkImage(imageURL),
+                      ),
+                      const SizedBox(height: 20,),
+                      Text('First Name: ${userData['firstName']}', style: const TextStyle(fontSize: 16),),
+                      const Divider(),
+                      Text('Last Name: ${userData['lastName']}', style: const TextStyle(fontSize: 16),),
+                      const Divider(),
+                      Text('Email: ${userData['email']}', style: const TextStyle(fontSize: 16),),
+                      const SizedBox(height: 20,),
                       ElevatedButton(
                         onPressed: () {
                           FirebaseAuth.instance.signOut();

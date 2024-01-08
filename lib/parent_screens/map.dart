@@ -87,6 +87,7 @@ class _MapScreenState extends State<MapScreen> {
       appBar: AppBar(
         title: const Text('Location Tracking'),
         backgroundColor: const Color.fromARGB(255, 117, 213, 243),
+        
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
@@ -104,8 +105,11 @@ class _MapScreenState extends State<MapScreen> {
         child: const Icon(Icons.location_on),
       ),
       body: childrenAvailable
-      ? MapDisplay(childId: childId)
-      : const Center(child: Text('No children available for tracking')),
+          ? MapDisplay(childId: childId)
+          : const Align(
+              alignment: Alignment.center,
+              child: Text('No children available for tracking'),
+            ),
     );
   }
 }
