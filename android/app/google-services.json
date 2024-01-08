@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "112265658488",
+    "project_id": "parentalapp-a5eaf",
+    "storage_bucket": "parentalapp-a5eaf.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:112265658488:android:f1f6e300ed1066aa8bad8d",
+        "android_client_info": {
+          "package_name": "com.example.parental_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDD6f8-KfCPkbIWvocy6NawVNJ9H9tYAAw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
